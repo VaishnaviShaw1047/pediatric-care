@@ -1,4 +1,5 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { GuardianRegistration, ChildRegistration } from './registration.model';
 
 const D = [
   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],

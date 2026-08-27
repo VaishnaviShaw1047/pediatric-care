@@ -1,12 +1,11 @@
 import { Component } from '@angular/core';
-import { RegisterPediaComponent } from './register-pedia/register-pedia.component';
-
+import{PatientRegisterComponent}  from './patient-register/patient-register';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RegisterPediaComponent],
+  imports:[PatientRegisterComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
+  styles: [],
 })
 export class AppComponent {
   title = 'pedia-centre';
