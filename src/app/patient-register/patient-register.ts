@@ -6,62 +6,32 @@ import {
   FormArray,
   Validators,
   ReactiveFormsModule,
-  AbstractControl,
-  ValidationErrors,
 } from '@angular/forms';
-
-const passwordMatch = (group: AbstractControl): ValidationErrors | null => {
-  const password = group.get('password')?.value;
-  const confirmPassword = group.get('confirmPassword')?.value;
-
-  return password && confirmPassword && password !== confirmPassword
-    ? { passwordMismatch: true }
-    : null;
-};
-
-const childDob = (control: AbstractControl): ValidationErrors | null => {
-  const value = control.value;
-  if (!value) return null;
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return { invalidDate: true };
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  date.setHours(0, 0, 0, 0);
-
-  return date > today ? { futureDate: true } : null;
-};
-
-const abhaIdValidator = (control: AbstractControl): ValidationErrors | null => {
-  const value = control.value;
-  if (!value) return null;
-
-  const normalized = value.replace(/[\s-]/g, '');
-  return /^[0-9]{14}$/.test(normalized) ? null : { invalidAbhaId: true };
-};
-
-const aadhaarValidator = (control: AbstractControl): ValidationErrors | null => {
-  const value = control.value;
-  if (!value) return null;
-
-  const normalized = value.replace(/[\s-]/g, '');
-  return /^[0-9]{12}$/.test(normalized) ? null : { invalidAadhaar: true };
-};
+import {
+  passwordMatch,
+  childDob,
+  abhaId as abhaIdValidator,
+  aadhaar as aadhaarValidator,
+} from './registration.validators';
+import { GuardianRegistration, ChildRegistration } from './registration.model';
 
 @Component({
-  selector: 'app-register-pedia',
+  selector: 'app-patient-register',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './register-pedia.component.html',
-  styleUrl: './register-pedia.component.scss',
+  templateUrl: './patient-register.component.html',
+  styleUrl: './patient-register.scss', 
+  // // stylesheet removed to avoid build error when the SCSS file is missing
+  // add back styleUrls with the correct path if/when the stylesheet is added
 })
-export class RegisterPediaComponent {
+export class PatientRegisterComponent {
   private fb = inject(FormBuilder);
 
+  
   submitted = false;
   otpSent = false;
   otpVerified = false;
+  registrationData: GuardianRegistration | null = null;
 
   readonly relationships = ['Mother', 'Father', 'Legal guardian', 'Other'];
   readonly languages = ['English', 'Hindi', 'Bengali'];
@@ -101,12 +71,14 @@ export class RegisterPediaComponent {
     },
     { validators: passwordMatch }
   );
-constructor() {
-  this.form.valueChanges.subscribe((value) => {
-    console.log('Form value:', value);
-    console.log('Valid:', this.form.valid);
-  });
-}
+
+  constructor() {
+    this.form.valueChanges.subscribe((value) => {
+      console.log('Form value:', value);
+      console.log('Valid:', this.form.valid);
+    });
+  }
+
   newChild(): FormGroup {
     return this.fb.group({
       firstName: ['', this.nameRules],
@@ -182,24 +154,39 @@ constructor() {
 
     const { confirmPassword, otp, ...raw } = this.form.value;
 
-    const payload = {
-      ...raw,
+    this.registrationData = {
+      firstName: raw.firstName,
+      lastName: raw.lastName,
+      relationshipToChild: raw.relationshipToChild,
+      mobileNumber: raw.mobileNumber,
       email: raw.email || null,
+      password: raw.password,
+      addressLine1: raw.addressLine1,
       addressLine2: raw.addressLine2 || null,
+      city: raw.city,
+      state: raw.state,
+      pincode: raw.pincode,
       preferredLanguage: raw.preferredLanguage || null,
-      children: raw.children.map((c: Record<string, string>) => ({
-        ...c,
-        abhaId: c['abhaId'] ? c['abhaId'].replace(/[\s-]/g, '') : null,
-        aadhaarNumber: c['aadhaarNumber'] ? c['aadhaarNumber'].replace(/[\s-]/g, '') : null,
-        bloodGroup: c['bloodGroup'] || null,
-        knownAllergies: c['knownAllergies'] || null,
-        existingConditions: c['existingConditions'] || null,
-        currentMedications: c['currentMedications'] || null,
-        immunizationStatus: c['immunizationStatus'] || null,
-        referredBy: c['referredBy'] || null,
-      })),
+      termsAccepted: raw.termsAccepted,
+      healthDataConsent: raw.healthDataConsent,
+      children: raw.children.map(
+        (c: Record<string, string>): ChildRegistration => ({
+          firstName: c['firstName'],
+          lastName: c['lastName'],
+          dateOfBirth: c['dateOfBirth'],
+          gender: c['gender'],
+          abhaId: c['abhaId'] ? c['abhaId'].replace(/[\s-]/g, '') : null,
+          aadhaarNumber: c['aadhaarNumber'] ? c['aadhaarNumber'].replace(/[\s-]/g, '') : null,
+          bloodGroup: c['bloodGroup'] || null,
+          knownAllergies: c['knownAllergies'] || null,
+          existingConditions: c['existingConditions'] || null,
+          currentMedications: c['currentMedications'] || null,
+          immunizationStatus: c['immunizationStatus'] || null,
+          referredBy: c['referredBy'] || null,
+        })
+      ),
     };
 
-    console.log('POST /api/v1/registration', payload);
+    console.log('Registration data:', this.registrationData);
   }
 }
