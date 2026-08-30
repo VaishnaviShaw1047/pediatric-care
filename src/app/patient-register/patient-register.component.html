@@ -279,6 +279,11 @@
 
     <small class="err block" *ngIf="submitted && !otpVerified">Verify your mobile number before submitting</small>
 
-    <button type="submit" class="primary full">Register </button>
+   <small class="err block" *ngIf="serverError">{{ serverError }}</small>
+<small class="ok block" *ngIf="successMessage">{{ successMessage }}</small>
+
+<button type="submit" class="primary full" [disabled]="submitting">
+  {{ submitting ? 'Registering...' : 'Register' }}
+</button>
   </form>
 </div>

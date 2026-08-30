@@ -14,6 +14,7 @@ import {
   aadhaar as aadhaarValidator,
 } from './registration.validators';
 import { GuardianRegistration, ChildRegistration } from './registration.model';
+import { RegistrationService } from './registration.service';
 
 @Component({
   selector: 'app-patient-register',
@@ -26,12 +27,16 @@ import { GuardianRegistration, ChildRegistration } from './registration.model';
 })
 export class PatientRegisterComponent {
   private fb = inject(FormBuilder);
+  private registrationService = inject(RegistrationService);
 
   
   submitted = false;
   otpSent = false;
   otpVerified = false;
   registrationData: GuardianRegistration | null = null;
+  submitting = false;
+  serverError: string | null = null;
+  successMessage: string | null = null;
 
   readonly relationships = ['Mother', 'Father', 'Legal guardian', 'Other'];
   readonly languages = ['English', 'Hindi', 'Bengali'];
@@ -186,7 +191,24 @@ export class PatientRegisterComponent {
         })
       ),
     };
+this.submitting = true;
+this.serverError = null;
+this.successMessage = null;
 
-    console.log('Registration data:', this.registrationData);
+this.registrationService.register(this.registrationData).subscribe({
+  next: (res) => {
+    this.submitting = false;
+    this.successMessage = `${res.message}. MRN: ${res.patients[0].mrn}`;
+    this.form.reset();
+    this.submitted = false;
+    this.otpSent = false;
+    this.otpVerified = false;
+  },
+  error: (err) => {
+    this.submitting = false;
+    this.serverError = err.error?.message ?? 'Something went wrong. Please try again.';
+  },
+});
+    
   }
 }
