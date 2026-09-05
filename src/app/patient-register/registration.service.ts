@@ -21,12 +21,14 @@ export class RegistrationService {
   private nextPatientId = 5001;
 
   register(payload: GuardianRegistration): Observable<RegistrationResponse> {
-    if (this.isMobileTaken(payload.mobileNumber)) {
-      return throwError(() => ({
-        status: 409,
-        error: { message: 'This mobile number is already registered' },
-      }));
-    }
+    // if (this.isMobileTaken(payload.mobileNumber)) {
+    //   return throwError(() => ({
+    //     status: 409,
+    //     error: { message: 'This mobile number is already registered' },
+    //   }));
+    // }
+    //for now mobile number can be duplicated
+    
 
     this.registered.push(payload);
 
